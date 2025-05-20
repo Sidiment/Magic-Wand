@@ -18,6 +18,15 @@
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ArduinoJson.h>
+
+// ——— Your Wi-Fi & server settings ———
+const char* ssid       = "UW MPSK";
+const char* password   = "5{@5(nN}_F";
+const char* serverUrl = "http://10.18.145.154:8080/predict"; // Fill in with server URL; Please keep /predict
+const char* studentId  = "zhao1010";
 
 // MPU6050 sensor
 Adafruit_MPU6050 mpu;
@@ -61,6 +70,7 @@ void setup()
     // Initialize serial
     Serial.begin(115200);
     
+    setupWiFi();
     // Initialize LED pins
     pinMode(3, OUTPUT);
     pinMode(4, OUTPUT);
@@ -85,6 +95,35 @@ void setup()
     
     Serial.println("MPU6050 initialized successfully");
     Serial.println("Send 'o' to start gesture capture");
+}
+/**
+ * @brief Send a gesture prediction to your server as JSON
+ */
+void sendGestureToServer(const char* gesture, float confidence) {
+    // Build JSON payload
+    String jsonPayload = "{";
+    jsonPayload += "\"student_id\":\""; jsonPayload += studentId;  jsonPayload += "\",";
+    jsonPayload += "\"gesture\":\"";    jsonPayload += gesture;    jsonPayload += "\",";
+    jsonPayload += "\"confidence\":";   jsonPayload += confidence; jsonPayload += "}";
+    
+    Serial.println("\n--- Sending Prediction to Server ---");
+    Serial.println("URL: " + String(serverUrl));
+    Serial.println("Payload: " + jsonPayload);
+
+    HTTPClient http;
+    http.begin(serverUrl);
+    http.addHeader("Content-Type", "application/json");
+    int code = http.POST(jsonPayload);
+
+    Serial.print("HTTP Response code: "); Serial.println(code);
+    if (code > 0) {
+        Serial.println("Server response: " + http.getString());
+    }
+    else {
+        Serial.printf("Error sending POST: %s\n", http.errorToString(code).c_str());
+    }
+    http.end();
+    Serial.println("--- End of Request ---\n");
 }
 
 /**
@@ -184,6 +223,10 @@ void print_inference_result(ei_impulse_result_t result) {
     }
     // Only print the prediction with highest confidence
     if (max_index != -1) {
+        // --- NEW: capture into locals ---
+        const char* gesture   = ei_classifier_inferencing_categories[max_index];
+        float confidence = max_value;
+
         Serial.print("Prediction: ");
         Serial.print(ei_classifier_inferencing_categories[max_index]);
         Serial.print(" (");
@@ -202,5 +245,21 @@ void print_inference_result(ei_impulse_result_t result) {
         } else if (max_index == 2) {
             digitalWrite(5, HIGH); // LED on GPIO 5
         }
+                // ── ★ HERE’S THE KEY LINE ★ ──
+        sendGestureToServer(gesture, confidence);
     }
+}
+
+void setupWiFi() {
+    Serial.println("Connecting to WiFi...");
+    WiFi.begin(ssid, password);
+
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
+
+    Serial.println();
+    Serial.print("Connected to "); Serial.println(ssid);
+    Serial.print("IP address: ");  Serial.println(WiFi.localIP());
 }
