@@ -1,5 +1,41 @@
 # TECHIN515 Lab 4 - Magic Wand
 
+## Quick Setup
+
+### Arduino (ESP32 + MPU6050)
+1. Open `gesture_capture/gesture_capture.ino` in Arduino IDE.
+2. Install the following libraries via Library Manager:
+   - Adafruit MPU6050
+   - Adafruit Sensor
+   - Wire (built-in)
+3. Select your ESP32 board and correct port.
+4. Upload the sketch to your ESP32.
+
+### Python (Data Capture)
+1. Open a terminal and navigate to the `gesture_capture` directory:
+   ```bash
+   cd gesture_capture
+   ```
+2. (Recommended) Create and activate a virtual environment:
+   - **macOS/Linux:**
+     ```bash
+     python3 -m venv .venv
+     source .venv/bin/activate
+     ```
+   - **Windows:**
+     ```bash
+     python -m venv .venv
+     .venv\Scripts\activate
+     ```
+3. Install required Python packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Run the data capture script (replace gesture/person as needed):
+   ```bash
+   python process_gesture_data.py --gesture "W" --person "your_name"
+   ```
+
 This project implements a gesture recognition system using an ESP32 microcontroller with an MPU6050. The system consists of two main components: a gesture data capture system and a gesture inference system.
 
 ## Learning Objectives
