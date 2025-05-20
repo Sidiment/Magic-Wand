@@ -1,5 +1,6 @@
 # TECHIN515 Lab 4 - Magic Wand
 
+
 ## Quick Setup
 
 ### Arduino (ESP32 + MPU6050)
